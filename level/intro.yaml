@@ -1,0 +1,11 @@
+[
+  [
+    { type: plane_basic, count: 2, position: 0.2 },
+    { type: plane_basic, count: 2, position: 0.8 },
+  ],
+  [
+    { type: plane_basic, count: 2, position: 0.5 },
+    { type: plane_basic, count: 4, position: 0.0 },
+    { type: plane_basic, count: 4, position: 1.0 },
+  ],
+]
