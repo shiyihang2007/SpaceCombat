@@ -45,17 +45,19 @@ class Game {
 	std::vector<AIPlaneObject *> Enemies;
 
 	// ai
-	AISimple aiSimple;
+	AISimple AiSimple;
 
 	// 按键对应的命令
-	Command *Commands[1024];
+	Command *Key2Commands[1024];
 
-	// 所有命令的实例s
+	// 所有命令的实例
 	NullCommand nullCommand;
 	MoveLeftCommand moveLeftCommand;
 	MoveRightCommand moveRightCommand;
 	MoveTopCommand moveTopCommand;
 	MoveBottomCommand moveBottomCommand;
+
+	std::unordered_map<CommandType, Command *> Commands;
 
 	// Constructor/Destructor
 	Game(GLuint width, GLuint height);

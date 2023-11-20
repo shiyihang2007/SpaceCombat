@@ -36,4 +36,6 @@ class MoveBottomCommand : public Command {
 	void Execute(GameObject *Actor, float dt) override;
 };
 
+enum CommandType { MoveLeft, MoveRight, MoveTop, MoveBottom };
+
 #endif
