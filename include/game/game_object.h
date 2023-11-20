@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 // clang-format on
 
+#include "glm/detail/type_vec.hpp"
 #include "sprite_renderer.h"
 #include "texture.h"
 
@@ -23,17 +24,13 @@ class GameObject {
 	Texture2D Sprite;
 	// constructor(s)
 	GameObject();
-	GameObject(
-		glm::vec2 pos, glm::vec2 size, Texture2D sprite,
-		glm::vec3 color = glm::vec3(1.0F),
-		glm::vec2 velocity = glm::vec2(0.0F, 0.0F),
-		void (*update)(GameObject *self, float dt, unsigned int window_width,
-					   unsigned int window_height) =
-			[](GameObject *self, float dt, unsigned int window_width,
-			   unsigned int window_height) {});
+	GameObject(glm::vec2 pos, glm::vec2 size, Texture2D sprite,
+			   glm::vec3 color = glm::vec3(1.0F),
+			   glm::vec2 velocity = glm::vec2(0.0F, 0.0F),
+			   float rotation = 0.0F);
 	// update
-	void (*update)(GameObject *self, float dt, unsigned int window_width,
-				   unsigned int window_height);
+	virtual void Update(float dt, unsigned int window_width,
+						unsigned int window_height);
 	// draw sprite
 	virtual void Draw(SpriteRenderer &renderer);
 };

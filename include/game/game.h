@@ -9,6 +9,7 @@
 
 #include "game/ai.h"
 #include "game/ai_plane_object.h"
+#include "game/bullet_object.h"
 #include "game/command.h"
 #include "game/plane_object.h"
 
@@ -56,6 +57,13 @@ class Game {
 	MoveRightCommand moveRightCommand;
 	MoveTopCommand moveTopCommand;
 	MoveBottomCommand moveBottomCommand;
+	FireCommand fireCommand;
+
+	// 所有子弹的实例
+	BulletObject *BasicBullet;
+
+	// 所有武器的实例
+	Weapon *BasicWeapon;
 
 	std::unordered_map<CommandType, Command *> Commands;
 

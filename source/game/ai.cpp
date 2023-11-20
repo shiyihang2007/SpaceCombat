@@ -102,6 +102,12 @@ auto AISimple::Update(
 		}
 	}
 
+	// fire
+	if (std::abs(self->Position.x - enemy->Position.x) <
+		static_cast<float>(Width) * 0.3F) {
+		commands.push_back(cmds[CommandType::Fire]);
+	}
+
 	std::sort(commands.begin(), commands.end());
 	commands.erase(std::unique(commands.begin(), commands.end()),
 				   commands.end());

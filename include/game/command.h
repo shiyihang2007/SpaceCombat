@@ -35,7 +35,12 @@ class MoveBottomCommand : public Command {
 	MoveBottomCommand() = default;
 	void Execute(GameObject *Actor, float dt) override;
 };
+class FireCommand : public Command {
+  public:
+	FireCommand() = default;
+	void Execute(GameObject *Actor, float dt) override;
+};
 
-enum CommandType { MoveLeft, MoveRight, MoveTop, MoveBottom };
+enum CommandType { MoveLeft, MoveRight, MoveTop, MoveBottom, Fire };
 
 #endif

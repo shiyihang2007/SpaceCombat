@@ -1,6 +1,7 @@
 #include "game/game.h"
 #include "game/ai.h"
 #include "game/ai_plane_object.h"
+#include "game/bullet_object.h"
 #include "game/command.h"
 #include "game/game_object.h"
 #include "game/level_loader.h"
@@ -10,6 +11,7 @@
 #include "resource_manager.h"
 #include "sprite_renderer.h"
 
+#include "spdlog/common.h"
 #include "spdlog/spdlog.h"
 
 #include <cmath>
@@ -40,9 +42,14 @@ Game::Game(unsigned int width, unsigned int height)
 	: State(GAME_ACTIVE), Keys(), Width(width), Height(height),
 	  rnd(std::random_device{}()) {}
 
-Game::~Game() { delete Renderer; }
+Game::~Game() {
+	delete Renderer;
+	delete Player;
+}
 
 void Game::Init() {
+	spdlog::set_level(spdlog::level::info);
+
 	// load shaders
 	ResourceManager::LoadShader("./shader/sprite.vert",
 								"./shader/sprite.frag", nullptr,
@@ -63,9 +70,11 @@ void Game::Init() {
 								 "plane_basic");
 	ResourceManager::LoadTexture("./texture/stars.png", true,
 								 "background");
+	ResourceManager::LoadTexture("./texture/bulletBasic.png", true,
+								 "bullet_basic");
 	// 设置缩放
 	PlaneSpriteScale = 0.03F;
-	// load Commands
+	// 加载命令
 	for (auto &command : this->Key2Commands) {
 		command = &nullCommand;
 	}
@@ -73,20 +82,34 @@ void Game::Init() {
 	this->Key2Commands[GLFW_KEY_D] = &moveRightCommand;
 	this->Key2Commands[GLFW_KEY_W] = &moveTopCommand;
 	this->Key2Commands[GLFW_KEY_S] = &moveBottomCommand;
+	this->Key2Commands[GLFW_KEY_SPACE] = &fireCommand;
 	Commands[CommandType::MoveLeft] = &moveLeftCommand;
 	Commands[CommandType::MoveRight] = &moveRightCommand;
 	Commands[CommandType::MoveTop] = &moveTopCommand;
 	Commands[CommandType::MoveBottom] = &moveBottomCommand;
-	// load Player
-	auto t = ResourceManager::GetTexture("plane_basic");
-	glm::vec2 playerSize =
-		glm::vec2(t.Width, t.Height) * PlaneSpriteScale;
-	glm::vec2 playerPos = glm::vec2(
-		static_cast<float>(this->Width) / 2.0F - playerSize.x / 2.0F,
-		static_cast<float>(this->Height) - playerSize.y);
-	this->Player =
-		new PlaneObject(playerPos, playerSize, t, PLAYER_COLOR);
-	// load Levels
+	Commands[CommandType::Fire] = &fireCommand;
+	// 加载子弹
+	{
+		auto t = ResourceManager::GetTexture("bullet_basic");
+		glm::vec2 bulletSize = glm::vec2(t.Width, t.Height) * 0.03F;
+		this->BasicBullet = new BulletObject(bulletSize, t);
+	}
+	// 加载武器
+	{ this->BasicWeapon = new Weapon(this->BasicBullet); }
+	// 加载玩家
+	{
+		auto t = ResourceManager::GetTexture("plane_basic");
+		glm::vec2 playerSize =
+			glm::vec2(t.Width, t.Height) * PlaneSpriteScale;
+		glm::vec2 playerPos = glm::vec2(
+			static_cast<float>(this->Width) / 2.0F -
+				playerSize.x / 2.0F,
+			static_cast<float>(this->Height) - playerSize.y);
+		this->Player = new PlaneObject(
+			playerPos, playerSize, t, PLAYER_COLOR, glm::vec2(1.0F),
+			glm::pi<float>() * -0.5F, this->BasicWeapon, 10);
+	}
+	// 加载关卡
 	auto FindLevels = [this](auto self, std::string path) -> void {
 		for (auto const &dirEntry :
 			 std::filesystem::recursive_directory_iterator{path}) {
@@ -111,10 +134,9 @@ void Game::Init() {
 }
 
 void Game::Update(float dt) {
-	this->Player->update(this->Player, dt, this->Width,
-						 this->Height);
+	this->Player->Update(dt, this->Width, this->Height);
 	for (auto *i : this->Enemies) {
-		i->update(i, dt, this->Width, this->Height);
+		i->Update(dt, this->Width, this->Height);
 	}
 	backgroundYPosition += dt * backgroundYVelocity;
 	backgroundYPosition =
@@ -131,13 +153,11 @@ auto Game::InputHandle(unsigned char *keys)
 	for (int i = 0; i < 1024; ++i) {
 		if (keys[i] != 0U) {
 			res.emplace_back(this->Key2Commands[i]);
-			// std::cerr << "key pressed: " << i << "\n";
 		}
 	}
 	return res;
 }
 
-// This part of code should be refactor someday.
 void Game::ProcessInput(float dt) {
 	auto res = this->InputHandle(Keys);
 	for (auto *i : res) {
@@ -176,11 +196,8 @@ void Game::Render() {
 		// 玩家
 		this->Player->Draw(*Renderer);
 		// 敌人
-		// std::cerr << "=====\n";
 		for (auto *i : this->Enemies) {
 			i->Draw(*Renderer);
-			// std::cerr << i->Position.x << " " << i->Position.y <<
-			// "\n";
 		}
 	}
 }
@@ -325,7 +342,8 @@ void Game::LoadLevel() {
 					pos.y - static_cast<float>(k + 1) * size.y);
 				this->Waves.back().emplace_back(
 					&this->AiSimple, tpos, size, t, ENEMY_COLOR,
-					glm::vec2(0.0, 30.0));
+					glm::vec2(0.0, 30.0), glm::pi<float>() * 0.5F,
+					this->BasicWeapon);
 			}
 		}
 	}
