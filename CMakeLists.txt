@@ -43,9 +43,21 @@ endif()
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/3rdparty/yaml-cpp/CMakeLists.txt")
     message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
 endif()
-add_subdirectory(3rdparty/yaml-cpp lib)
+add_subdirectory(3rdparty/yaml-cpp)
 include_directories(3rdparty/yaml-cpp/include)
 set(libs ${libs} yaml-cpp)
+
+# spdlog
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/3rdparty/spdlog/CMakeLists.txt")
+    message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
+endif()
+add_subdirectory(3rdparty/spdlog lib/spdlog)
+if(NOT TARGET spdlog)
+    # Stand-alone build
+    find_package(spdlog REQUIRED)
+endif()
+include_directories(3rdparty/spdlog/include)
+set(libs ${libs} spdlog::spdlog)
 
 # sources
 file(GLOB sources CONFIGURE_DEPENDS ./source/*.c*  ./source/game/*.c*)
